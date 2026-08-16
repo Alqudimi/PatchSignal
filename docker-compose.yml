@@ -1,0 +1,7 @@
+services:
+  patchsignal:
+    build: .
+    working_dir: /workspace/target
+    volumes:
+      - ./:/workspace/target:ro
+    command: ["--repo", "/workspace/target", "--format", "markdown"]
