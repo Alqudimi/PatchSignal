@@ -18,6 +18,7 @@ def render_markdown(result: AnalysisResult) -> str:
         "",
         f"**Range:** `{result.base}` → `{result.head}`  ",
         f"**Maximum risk:** `{result.max_risk.value}`  ",
+        f"**Recommended test mode:** `{result.recommended_mode}`  ",
         f"**Graph:** {result.graph_nodes} nodes, {result.graph_edges} edges",
         "",
         "## Risk signals",

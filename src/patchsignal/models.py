@@ -65,6 +65,8 @@ class AnalysisResult:
     risk_signals: list[RiskSignal] = field(default_factory=list)
     graph_nodes: int = 0
     graph_edges: int = 0
+    recommended_mode: str = "targeted"
+    unskippable_tests: list[str] = field(default_factory=list)
 
     @property
     def max_risk(self) -> RiskLevel:

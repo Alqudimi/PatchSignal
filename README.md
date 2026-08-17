@@ -21,7 +21,8 @@ PatchSignal is deliberately deterministic and offline-friendly. It does not uplo
 | Change discovery | Reads working-tree changes or a `base...head` Git range without shell interpolation. |
 | Symbol indexing | Extracts Python symbols with `ast` and common TypeScript/JavaScript declarations. |
 | Dependency evidence | Records imports and uses filename/module relationships for candidate impact. |
-| Test selection | Finds nearby test/spec files and explains why they are candidates. |
+| Test selection | Finds nearby test/spec files, promotes mandatory tests, and recommends `targeted` or `full` execution. |
+| Repository policy | Loads optional `.patchsignal.toml` rules for full-run paths, unskippable tests, and ignored generated/vendor paths. |
 | Risk gates | Flags workflow changes, security-sensitive paths, dependency/config changes, and public API surface changes. |
 | Reports | Markdown for review, JSON for automation, and SARIF 2.1.0 for code-scanning consumers. |
 | Extensibility | Parser and renderer boundaries are isolated so more languages and evidence providers can be added. |
@@ -34,6 +35,18 @@ python -m venv .venv
 python -m pip install -e '.[dev]'
 patchsignal --repo .
 ```
+
+Add repository-specific policy when targeted testing needs guardrails:
+
+```toml
+# .patchsignal.toml
+[patchsignal]
+full_run_paths = ["pyproject.toml", ".github/**"]
+unskippable_tests = ["tests/test_core.py"]
+ignored_paths = ["generated/**", "vendor/**"]
+```
+
+The report exposes the recommended mode (`targeted` or `full`) and keeps mandatory tests in the candidate set. See [`examples/.patchsignal.toml.example`](examples/.patchsignal.toml.example).
 
 Analyze a pull-request range:
 

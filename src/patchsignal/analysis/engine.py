@@ -2,21 +2,26 @@
 
 from __future__ import annotations
 
+from fnmatch import fnmatch
 from pathlib import Path
 
 from patchsignal.analysis.python_parser import parse_python_file
 from patchsignal.analysis.typescript_parser import parse_typescript_file
+from patchsignal.config import AnalysisConfig
 from patchsignal.models import AnalysisResult, ImpactItem, Relation, RiskLevel, RiskSignal, Symbol
 
 _SUPPORTED = {".py", ".ts", ".tsx", ".js", ".jsx"}
 _TEST_MARKERS = ("test", "spec")
 
 
-def _parse_repository(root: Path) -> tuple[list[Symbol], list[Relation]]:
+def _parse_repository(root: Path, config: AnalysisConfig) -> tuple[list[Symbol], list[Relation]]:
     symbols: list[Symbol] = []
     relations: list[Relation] = []
     for path in root.rglob("*"):
+        relative = path.relative_to(root).as_posix() if path.is_absolute() else path.as_posix()
         if not path.is_file() or ".git" in path.parts or path.suffix not in _SUPPORTED:
+            continue
+        if any(fnmatch(relative, pattern) for pattern in config.ignored_paths):
             continue
         try:
             parsed = parse_python_file(path, root) if path.suffix == ".py" else parse_typescript_file(path, root)
@@ -37,18 +42,31 @@ def _is_related(changed: str, candidate: str, relations: list[Relation]) -> bool
     if changed_stem and changed_stem in candidate_stem or candidate_stem and candidate_stem in changed_stem:
         return True
     return any(
-        relation.source == candidate and _module_stem(changed) in relation.target.lower() for relation in relations
+        relation.source == candidate and changed_stem and changed_stem in relation.target.lower()
+        for relation in relations
     )
 
 
+def _matches_any(path: str, patterns: tuple[str, ...]) -> bool:
+    return any(fnmatch(path, pattern) or pattern in path for pattern in patterns)
+
+
 def analyze(
-    root: Path, changed_paths: list[str], base: str = "working-tree", head: str = "working-tree"
+    root: Path,
+    changed_paths: list[str],
+    base: str = "working-tree",
+    head: str = "working-tree",
+    config: AnalysisConfig | None = None,
 ) -> AnalysisResult:
-    symbols, relations = _parse_repository(root)
-    changed = set(changed_paths)
+    policy = config or AnalysisConfig()
+    symbols, relations = _parse_repository(root, policy)
+    changed = {path for path in changed_paths if not _matches_any(path, policy.ignored_paths)}
     impacted = [
         ImpactItem(
-            symbol.path, f"symbol {symbol.qualified_name} is defined in a changed file", 90, (symbol.qualified_name,)
+            symbol.path,
+            f"symbol {symbol.qualified_name} is defined in a changed file",
+            90,
+            (symbol.qualified_name,),
         )
         for symbol in symbols
         if symbol.path in changed
@@ -57,7 +75,8 @@ def analyze(
         {
             symbol.path
             for symbol in symbols
-            if symbol.path not in changed and _is_related(next(iter(changed), ""), symbol.path, relations)
+            if symbol.path not in changed
+            and any(_is_related(changed_path, symbol.path, relations) for changed_path in changed)
         }
     )
     tests = sorted(
@@ -67,14 +86,37 @@ def analyze(
             if path.is_file() and any(marker in path.name.lower() for marker in _TEST_MARKERS)
         }
     )
+    mandatory = sorted(
+        {
+            path.relative_to(root).as_posix()
+            for path in tests
+            if _matches_any(path.relative_to(root).as_posix(), policy.unskippable_tests)
+        }
+    )
     candidate_tests = [
         ImpactItem(
-            path.relative_to(root).as_posix(), "test filename is related to an impacted module", 80, (path.name,)
+            path.relative_to(root).as_posix(),
+            "test filename is related to an impacted module",
+            80,
+            (path.name,),
         )
         for path in tests
         if any(_is_related(changed_path, path.relative_to(root).as_posix(), relations) for changed_path in changed)
     ]
-    signals = _risk_signals(root, changed_paths, symbols)
+    mandatory_paths = set(mandatory)
+    candidate_tests = [
+        ImpactItem(item.path, "configured as unskippable by repository policy", 100, ("policy",))
+        if item.path in mandatory_paths
+        else item
+        for item in candidate_tests
+    ]
+    candidate_tests.extend(
+        ImpactItem(path, "configured as unskippable by repository policy", 100, ("policy",))
+        for path in mandatory
+        if path not in {item.path for item in candidate_tests}
+    )
+    full_run = not changed or any(_matches_any(path, policy.full_run_paths) for path in changed)
+    signals = _risk_signals(changed_paths, symbols)
     return AnalysisResult(
         base=base,
         head=head,
@@ -85,10 +127,12 @@ def analyze(
         risk_signals=signals,
         graph_nodes=len({symbol.path for symbol in symbols}),
         graph_edges=len(relations),
+        recommended_mode="full" if full_run else "targeted",
+        unskippable_tests=mandatory,
     )
 
 
-def _risk_signals(root: Path, changed_paths: list[str], symbols: list[Symbol]) -> list[RiskSignal]:
+def _risk_signals(changed_paths: list[str], symbols: list[Symbol]) -> list[RiskSignal]:
     signals: list[RiskSignal] = []
     paths = tuple(sorted(changed_paths))
     if any(path.endswith((".yml", ".yaml", ".github/workflows")) or ".github/workflows/" in path for path in paths):

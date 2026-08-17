@@ -9,6 +9,7 @@ from patchsignal.analysis.engine import analyze
 from patchsignal.analysis.python_parser import parse_python_file
 from patchsignal.analysis.typescript_parser import parse_typescript_file
 from patchsignal.cli import _risk_exit_code, main
+from patchsignal.config import AnalysisConfig
 from patchsignal.models import RiskLevel
 from patchsignal.output.renderers import render_json, render_markdown, render_sarif
 
@@ -101,6 +102,26 @@ def test_git_adapter_reads_worktree_and_range(tmp_path: Path) -> None:
 def test_git_adapter_reports_invalid_repo(tmp_path: Path) -> None:
     with pytest.raises(GitError):
         changed_files(tmp_path, "main", "HEAD")
+
+
+def test_policy_config_controls_full_run_and_mandatory_tests(tmp_path: Path) -> None:
+    (tmp_path / "service.py").write_text("def serve():\n    return True\n", encoding="utf-8")
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "test_service.py").write_text("def test_service():\n    assert True\n", encoding="utf-8")
+    config = AnalysisConfig(full_run_paths=("service.py",), unskippable_tests=("tests/test_service.py",))
+
+    result = analyze(tmp_path, ["service.py"], config=config)
+
+    assert result.recommended_mode == "full"
+    assert result.unskippable_tests == ["tests/test_service.py"]
+    assert result.candidate_tests[0].score == 100
+
+
+def test_invalid_policy_config_is_rejected(tmp_path: Path) -> None:
+    config_path = tmp_path / "bad.toml"
+    config_path.write_text('full_run_paths = "not-an-array"\n', encoding="utf-8")
+    with pytest.raises(ValueError):
+        AnalysisConfig.load(config_path)
 
 
 def test_cli_writes_json_report_and_returns_success(tmp_path: Path) -> None:

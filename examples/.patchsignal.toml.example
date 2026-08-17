@@ -1,0 +1,9 @@
+[patchsignal]
+# Any change matching these patterns recommends the complete test suite.
+full_run_paths = ["pyproject.toml", "uv.lock", ".github/**", "src/patchsignal/models.py"]
+
+# These tests are always included in the candidate set.
+unskippable_tests = ["tests/test_core.py"]
+
+# Generated or vendored code can be excluded from indexing and impact scoring.
+ignored_paths = ["vendor/**", "generated/**"]

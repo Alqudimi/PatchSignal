@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "patchsignal"
-version = "0.1.0"
+version = "0.2.0"
 description = "Explainable, local-first change-impact analysis for safer code review and CI."
 readme = "README.md"
 requires-python = ">=3.11"

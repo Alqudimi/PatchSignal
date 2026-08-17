@@ -2,6 +2,20 @@
 
 All notable changes to PatchSignal are documented here.
 
+## [0.2.0] - 2026-08-17
+
+### Added
+
+- Optional `.patchsignal.toml` policies for full-run paths, mandatory tests, and ignored generated/vendor paths.
+- Multi-file impact evaluation instead of using only the first changed path.
+- Explicit `targeted` versus `full` test execution recommendations.
+- Mandatory tests are promoted to score 100 in reports even when they were already discovered by impact analysis.
+- Docker ignore rules and expanded policy documentation.
+
+### Fixed
+
+- Transitive impact selection now considers every changed file in a diff.
+
 ## [0.1.0] - 2026-08-16
 
 ### Added

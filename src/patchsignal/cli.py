@@ -8,6 +8,7 @@ from pathlib import Path
 
 from patchsignal.adapters.git import GitError, changed_files, changed_files_from_worktree
 from patchsignal.analysis.engine import analyze
+from patchsignal.config import AnalysisConfig
 from patchsignal.output.renderers import render_json, render_markdown, render_sarif
 
 
@@ -18,6 +19,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--repo", type=Path, default=Path.cwd(), help="Repository root (default: current directory).")
     parser.add_argument("--base", default=None, help="Git base revision; omit to inspect working-tree changes.")
     parser.add_argument("--head", default="HEAD", help="Git head revision when --base is supplied.")
+    parser.add_argument(
+        "--config", type=Path, help="Optional TOML policy file (default: .patchsignal.toml if present)."
+    )
     parser.add_argument("--format", choices=("markdown", "json", "sarif"), default="markdown")
     parser.add_argument("--output", type=Path, help="Write the report to a file instead of stdout.")
     parser.add_argument(
@@ -39,7 +43,9 @@ def main(argv: list[str] | None = None) -> int:
         else:
             files = changed_files_from_worktree(repo)
             base = head = "working-tree"
-        result = analyze(repo, [item.path for item in files], base, head)
+        config_path = args.config or (repo / ".patchsignal.toml")
+        config = AnalysisConfig.load(config_path if config_path.exists() else None)
+        result = analyze(repo, [item.path for item in files], base, head, config)
         result.changed_files = files
         rendered = {"markdown": render_markdown, "json": render_json, "sarif": render_sarif}[args.format](result)
     except (GitError, OSError, ValueError) as exc:
