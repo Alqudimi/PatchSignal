@@ -2,6 +2,18 @@
 
 All notable changes to PatchSignal are documented here.
 
+## [0.2.1] - 2026-08-17
+
+### Added
+
+- Bandit static security scanning in the development toolchain and CI.
+- Mypy static type checking as a required CI gate.
+
+### Fixed
+
+- Corrected the typed visitor contract for asynchronous Python functions.
+- Documented the bounded Git subprocess exception used by the local adapter.
+
 ## [0.2.0] - 2026-08-17
 
 ### Added

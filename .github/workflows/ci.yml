@@ -28,6 +28,8 @@ jobs:
         run: ruff check .
       - name: Type check
         run: mypy src
+      - name: Static security scan
+        run: bandit -q -r src
       - name: Compile check
         run: python -m compileall -q src
       - name: Build wheel

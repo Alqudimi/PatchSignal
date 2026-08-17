@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import subprocess
+import subprocess  # nosec B404 - Git is invoked with a fixed executable and argv list.
 from pathlib import Path
 
 from patchsignal.models import ChangedFile
@@ -14,8 +14,13 @@ class GitError(RuntimeError):
 
 def _run(repo: Path, *args: str) -> str:
     try:
-        completed = subprocess.run(
-            ["git", "-c", "color.ui=false", *args], cwd=repo, check=True, capture_output=True, text=True, timeout=30
+        completed = subprocess.run(  # nosec - fixed Git executable, argv list, shell=False, and timeout.
+            ["git", "-c", "color.ui=false", *args],
+            cwd=repo,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
     except (OSError, subprocess.SubprocessError) as exc:
         raise GitError(f"git command failed: {args[0]}") from exc
