@@ -33,7 +33,8 @@ def parse_python_file(path: Path, root: Path) -> tuple[list[Symbol], list[Relati
             self.generic_visit(node)
             self.scope.pop()
 
-        visit_AsyncFunctionDef = visit_FunctionDef
+        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+            self.visit_FunctionDef(node)  # type: ignore[arg-type]
 
         def visit_Import(self, node: ast.Import) -> None:
             for alias in node.names:

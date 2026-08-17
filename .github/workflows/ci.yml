@@ -26,6 +26,8 @@ jobs:
         run: python -m pytest --cov=patchsignal --cov-report=term-missing --cov-fail-under=85
       - name: Lint
         run: ruff check .
+      - name: Type check
+        run: mypy src
       - name: Compile check
         run: python -m compileall -q src
       - name: Build wheel
