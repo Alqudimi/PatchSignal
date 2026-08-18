@@ -12,6 +12,18 @@ All notable changes to PatchSignal are documented here.
 
 - `CI_CONFIG_CHANGED` now fires only for paths inside `.github/workflows/` instead of any file ending in `.yml` or `.yaml`, removing false positives for unrelated YAML documents.
 
+## [0.3.0] - 2026-08-18
+
+### Added
+
+- 16 regression and boundary tests covering CLI failures, TOML validation, risk-rule thresholds, Git defensive branches, and empty repositories.
+- Corrected `CI_CONFIG_CHANGED` so ordinary YAML documentation files do not force a full run.
+- Raised effective project coverage to 96.91% on the expanded suite.
+
+### Fixed
+
+- Synchronized package metadata with the current release line after the merged maintainer PR.
+
 ## [0.2.1] - 2026-08-17
 
 ### Added
