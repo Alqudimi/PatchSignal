@@ -135,7 +135,7 @@ def analyze(
 def _risk_signals(changed_paths: list[str], symbols: list[Symbol]) -> list[RiskSignal]:
     signals: list[RiskSignal] = []
     paths = tuple(sorted(changed_paths))
-    if any(path.endswith((".yml", ".yaml", ".github/workflows")) or ".github/workflows/" in path for path in paths):
+    if any(".github/workflows/" in path or path.split("/")[-1] in (".github", "workflows") for path in paths):
         signals.append(
             RiskSignal(
                 "CI_CONFIG_CHANGED",

@@ -2,6 +2,16 @@
 
 All notable changes to PatchSignal are documented here.
 
+## [Unreleased]
+
+### Added
+
+- Test suite covering previously unproven behavior: CLI error paths and exit-code contract, policy loading boundaries (missing, malformed and invalid-table configs), risk-rule thresholds including the three-export `PUBLIC_API_SURFACE` boundary, and Git adapter defensive branches.
+
+### Fixed
+
+- `CI_CONFIG_CHANGED` now fires only for paths inside `.github/workflows/` instead of any file ending in `.yml` or `.yaml`, removing false positives for unrelated YAML documents.
+
 ## [0.2.1] - 2026-08-17
 
 ### Added
