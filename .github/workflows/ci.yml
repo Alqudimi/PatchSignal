@@ -27,7 +27,11 @@ jobs:
       - name: Lint
         run: ruff check .
       - name: Type check
-        run: mypy src
+        run: mypy src tests scripts
+      - name: Validate GitHub metadata
+        run: |
+          python scripts/validate_workflow.py
+          python scripts/validate_action.py
       - name: Static security scan
         run: bandit -q -r src
       - name: Compile check

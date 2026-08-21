@@ -55,6 +55,23 @@ patchsignal --repo . --base origin/main --head HEAD --format markdown
 patchsignal --repo . --base origin/main --head HEAD --format sarif --output patchsignal.sarif
 ```
 
+## Reusable GitHub Action
+
+PatchSignal can run as a composite action in another workflow without copying the CLI logic:
+
+```yaml
+- uses: Alqudimi/PatchSignal@v0.3.0
+  with:
+    repo: .
+    base: ${{ github.event.pull_request.base.sha }}
+    head: ${{ github.event.pull_request.head.sha }}
+    format: sarif
+    output: patchsignal-report.sarif
+    fail-on: high
+```
+
+The action installs the pinned source from `github.action_path`, passes user inputs as argv values rather than shell fragments, and keeps the report in the caller workspace.
+
 Use it as a CI gate:
 
 ```bash

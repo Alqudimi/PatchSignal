@@ -12,6 +12,19 @@ All notable changes to PatchSignal are documented here.
 
 - `CI_CONFIG_CHANGED` now fires only for paths inside `.github/workflows/` instead of any file ending in `.yml` or `.yaml`, removing false positives for unrelated YAML documents.
 
+## [0.4.0] - 2026-08-21
+
+### Added
+
+- Reusable `action.yml` composite action for running PatchSignal from external workflows.
+- Safe action inputs for repository, Git range, output format, output path, and risk threshold.
+- CI validation for both workflow YAML and action metadata.
+- Typed validation scripts included in the mypy surface.
+
+### Fixed
+
+- Action YAML descriptions with colons are explicitly quoted for strict YAML parsers.
+
 ## [0.3.0] - 2026-08-18
 
 ### Added
